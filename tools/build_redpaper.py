@@ -2,6 +2,13 @@ from pathlib import Path
 import re
 root = Path(__file__).resolve().parent.parent
 source = (root/'upstream/redpaper/RedPaper_remove_ads.js').read_text()
+# Fail closed when upstream changes the structures our adapter patches.
+required = ['if (!$response.body) $done({});', 'let obj = JSON.parse($response.body);',
+            '      obj.data = modDatas;\n',
+            '    $persistentStore.write(JSON.stringify(newDatas), "redBookVideoFeed");']
+for marker in required:
+    if source.count(marker) != 1:
+        raise ValueError('Upstream JS structure changed; adapter review required: ' + marker)
 source = source.replace('if (!$response.body) $done({});', 'if (!$response.body) return {};')
 source = source.replace('JSON.parse($persistentStore.read(', 'readCache(')
 # readCache("key")); -> readCache("key");
@@ -52,6 +59,36 @@ $done(result);
 # Compatibility entry for previously installed modules.
 (root/'RedPaperSurge.js').write_text(wrapper)
 lpx = (root/'upstream/redpaper/RedPaper_remove_ads.lpx').read_text()
+# Reject unsupported Loon directives rather than silently omitting them.
+section = None
+json_rewrites = []
+for raw in lpx.splitlines():
+    line = raw.strip()
+    if not line or line.startswith('#'):
+        continue
+    if line.startswith('['):
+        if line not in ['[Rule]', '[Rewrite]', '[Script]', '[MitM]']:
+            raise ValueError('Unsupported upstream section: ' + line)
+        section = line
+        continue
+    valid = False
+    if section == '[Rule]':
+        valid = re.sub(r'\s+', '', line) == 'AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT'
+    elif section == '[Rewrite]':
+        valid = bool(re.fullmatch(r'\^\S+ (reject-img|reject-dict)', line))
+        if ' response-body-json-replace ' in line:
+            json_rewrites.append(line)
+            valid = True
+    elif section == '[Script]':
+        valid = bool(re.fullmatch(r'http-response \S+ script-path=https://kelee\.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads\.js, requires-body=true, tag=.+', line))
+    elif section == '[MitM]':
+        valid = bool(re.fullmatch(r'hostname=[a-zA-Z0-9*., -]+', line))
+    if not valid:
+        raise ValueError('Unsupported upstream directive: ' + line)
+# These four JSON rewrites are currently implemented in the adapter above.
+expected_json = (root/'tools/redpaper-json-rewrites.txt').read_text().splitlines()
+if json_rewrites != expected_json:
+    raise ValueError('Upstream JSON rewrites changed; adapter review required')
 lines=['#!name=小红书去广告与去水印（Surge 适配）','#!desc=基于可莉 Loon 插件，原作者 RuCu6、fmz200。启用重写与 MITM；脚本由 GitHub 自动下载。','', '[Rule]', 'AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT', '', '[Map Local]']
 for pattern, action in re.findall(r'^(\^\S+) (reject-img|reject-dict)$',lpx,re.M):
     value='data-type=tiny-gif' if action=='reject-img' else 'data-type=text data="{}" header="Content-Type:application/json"'

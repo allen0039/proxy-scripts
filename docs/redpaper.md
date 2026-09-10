@@ -44,4 +44,12 @@ node --check Scripts/Surge/RedPaperSurge.js
 node tests/redpaper.cjs
 ```
 
-upstream/redpaper/ 保存本次使用的源文件。本仓库不自动跟踪上游更新；Surge 自动下载的是本仓库发布的脚本。
+upstream/redpaper/ 保存本次使用的源文件。本仓库每天通过 GitHub Actions 检查上游，转换及测试通过后自动发布；Surge 下载的是本仓库发布的脚本，实际更新取决于设备的资源刷新与缓存。
+
+## 自动同步小红书上游
+
+[同步工作流](https://github.com/allen0039/proxy-scripts/actions/workflows/sync-redpaper.yml)每天北京时间 **09:23** 检查原插件及原脚本（GitHub 调度可能延迟），也可在 Actions 页面点击 **Run workflow** 手动运行。
+
+发现内容变化后，在临时目录转换为 Surge 版本，检查上游指令、适配结构、JavaScript 语法并执行模拟响应测试。全部通过才提交到 main，同时更新规范目录与根目录兼容入口。无变化不提交；下载失败、出现未知写法或测试失败时不发布，保留现有版本，可在 Actions 日志查看原因。上游结构变化时仍可能需要人工调整转换器，不能保证所有未来版本都可自动适配。
+
+上游快照的同步时间和 SHA-256 在成功更新后记录到 `upstream/redpaper/sync.json`。上方旧日期仅表示首次快照版本。设备需刷新模块与脚本资源才能使用新版本。公开仓库长期无活动时，GitHub 可能暂停定时工作流，届时需重新启用。
