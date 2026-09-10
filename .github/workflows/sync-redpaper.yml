@@ -1,0 +1,47 @@
+name: Sync RedPaper upstream
+
+on:
+  schedule:
+    - cron: '23 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-redpaper
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download, convert and validate upstream
+        run: python3 tools/sync_redpaper.py
+      - name: Publish validated changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add upstream/redpaper/RedPaper_remove_ads.js upstream/redpaper/RedPaper_remove_ads.lpx Scripts/Surge/RedPaperSurge.js Surge/Modules/RedPaper_remove_ads.sgmodule RedPaperSurge.js RedPaper_remove_ads.sgmodule
+          if [ -f upstream/redpaper/sync.json ]; then git add upstream/redpaper/sync.json; fi
+          if git diff --cached --quiet; then
+            echo "Upstream unchanged; no commit needed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: sync RedPaper upstream and rebuild Surge adaptation'
+          gh auth setup-git
+          git push origin HEAD:main
+          echo "Updated upstream snapshots and published validated Surge files." >> "$GITHUB_STEP_SUMMARY"
