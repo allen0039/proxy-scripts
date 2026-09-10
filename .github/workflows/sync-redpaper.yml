@@ -27,6 +27,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify synchronizer and existing adaptation
+        run: |
+          python3 -m unittest discover -s tests -p 'test_*.py'
+          python3 tools/build_redpaper.py
+          node --check Scripts/Surge/RedPaperSurge.js
+          node tests/redpaper.cjs
+          git diff --exit-code -- Scripts/Surge Surge/Modules RedPaperSurge.js RedPaper_remove_ads.sgmodule
       - name: Download, convert and validate upstream
         run: python3 tools/sync_redpaper.py
       - name: Publish validated changes
