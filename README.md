@@ -1,47 +1,67 @@
-# 小红书去广告与去水印 · Surge 适配版
+# Proxy Scripts · 代理工具规则、模块与脚本合集
 
-基于可莉发布的 Loon 插件适配，原作者 RuCu6、fmz200。本仓库不是原作者的官方 Surge 版本。
+Allen 的个人代理工具资源仓库，集中维护分流规则、去广告模块和脚本。按客户端分类，目前提供 **Surge** 模块；后续按需加入 Loon、Quantumult X 等工具的适配版本。
 
-## 链接安装
+## 模块安装
 
-在 Surge → 模块 → 安装新模块中粘贴：
+在 Surge → 模块 → 安装新模块中，粘贴下方对应地址。
+
+| 模块 | 功能 | MITM | 安装地址与说明 |
+| --- | --- | --- | --- |
+| anti-AD 基础去广告 | 通过官方规则集拦截广告、追踪域名 | 不需要 | [模块地址](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/anti-ad-base.sgmodule) · [使用说明](docs/anti-ad.md) |
+| 小红书去广告与去水印 | 开屏、信息流、搜索等内容清理及保存去水印 | 需要 | [模块地址](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/RedPaper_remove_ads.sgmodule) · [使用说明](docs/redpaper.md) |
+
+**anti-AD 基础模块：**
 
 ```text
-https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaper_remove_ads.sgmodule
+https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/anti-ad-base.sgmodule
 ```
 
-[查看／下载模块](https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaper_remove_ads.sgmodule)
+**小红书模块：**
 
-模块会自动下载本仓库的 JS 脚本，无需手动复制文件。设备需要能访问 raw.githubusercontent.com。
+```text
+https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/RedPaper_remove_ads.sgmodule
+```
 
-1. 禁用旧的小红书 Loon 模块及其他重复处理小红书的脚本，再启用本模块。
-2. 开启 Surge 的重写、MITM，并安装及完全信任 Surge CA 证书。
-3. 清除小红书缓存、彻底退出后重开。先打开笔记／播放视频，再保存图片、视频或实况。
+模块依赖的规则和脚本由 Surge 下载，设备需要能访问相应地址。anti-AD 做域名拦截，小红书模块处理 App 接口，两者可配合使用；避免再同时启用重复处理小红书接口的脚本合集。
 
-适配目标为 Surge iOS 5.22.0；Map Local 功能要求至少 iOS 5.9.1 或 Mac 5.5.1。
+## 目录结构
 
-## 功能与限制
+```text
+Surge/Modules/       Surge 可直接安装的模块
+Scripts/Surge/       Surge 使用的 JavaScript 脚本
+Rules/Surge/         Surge 规则源索引；后续存放自维护规则
+docs/              各模块的使用说明和限制
+tools/             构建工具
+tests/             脚本验证
+upstream/redpaper/ 小红书上游原始快照与来源说明
+```
 
-包含原插件的开屏、信息流、搜索、关注页广告及推荐内容清理，以及图片、视频、实况和评论实况去水印。原规则也会过滤部分直播、带货和推荐内容。
+新增客户端时使用对应名称的目录，例如 `Loon/Plugins/`、`QuantumultX/Rewrite/`、`Scripts/Loon/`、`Rules/Loon/`；只在确认跨客户端兼容后才放入 `Scripts/Common/`。上游快照用于适配和追溯，安装时使用上方模块目录中的发布版本。
 
-使用 Surge 原生 Rule、Map Local、Script、MITM 配置；MITM 域名采用追加方式。保留原作者主要脚本逻辑，增加异常响应原样放行、缓存容错，并修复视频列表全为广告时漏过滤的问题。响应体超过 5 MiB 时 Surge 会跳过脚本。
+新增资源应同时添加使用说明、来源署名及首页安装链接。涉及脚本改动时，运行相应验证。
 
-已通过 JavaScript 语法检查和 21 次模拟响应验证；尚未完成 iPhone Surge 实机验证。接口变化、缓存、MITM 排除规则及重复脚本可能影响结果。此模块修改媒体地址和保存配置，无法擦除原始像素中已嵌入的水印。
+## 开发与验证
 
-如果未生效，在 Surge 请求记录中检查小红书接口是否显示完整 HTTPS 路径、是否运行 redpaper-surge-*，以及是否出现脚本下载失败、超时或响应过大。每个响应只会运行第一个匹配脚本。
-
-## 来源与构建
-
-- 原作者：[RuCu6](https://github.com/RuCu6)、[fmz200](https://github.com/fmz200)
-- 发布目录：[可莉插件中心](https://hub.kelee.one)
-- [原插件](https://kelee.one/Tool/Loon/Lpx/RedPaper_remove_ads.lpx)，标注 2026-06-01
-- [原脚本](https://kelee.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads.js)，标注 2026-02-14
-- 上游快照获取日期：2026-09-10。保留原作者署名；上游内容权利归原作者所有。
+在仓库根目录执行：
 
 ```sh
-python3 build.py
-node --check RedPaperSurge.js
-node test.cjs
+python3 tools/build_redpaper.py
+node --check Scripts/Surge/RedPaperSurge.js
+node tests/redpaper.cjs
 ```
 
-upstream/ 保存本次使用的源文件。本仓库不自动跟踪上游更新；Surge 自动下载的是本仓库发布的脚本。
+小红书脚本和模块由构建工具生成，修改适配逻辑时编辑 `tools/build_redpaper.py`，避免重新构建覆盖手工改动。anti-AD 模块直接维护，不需要构建。
+
+## 旧仓库迁移
+
+本仓库原名 `redbooknoads`，现改名为 `proxy-scripts`。根目录的 `RedPaper_remove_ads.sgmodule` 和 `RedPaperSurge.js` 保留为兼容入口，由构建工具与规范路径同步生成；新安装请使用上方分类目录中的地址。
+
+已安装的用户建议将模块订阅地址更新为新地址。GitHub 的旧仓库重定向不应作为永久安装地址使用。
+
+## 来源
+
+- anti-AD：[privacy-protection-tools/anti-AD](https://github.com/privacy-protection-tools/anti-AD)。本仓库模块直接引用官方规则，不复制或自动修改上游规则。
+- 小红书：基于可莉发布的 Loon 插件适配，原作者 RuCu6、fmz200，详见[来源与构建说明](docs/redpaper.md#来源与构建)。这是个人 Surge 适配版本。
+
+保留各资源原作者署名，上游内容权利及许可归相应作者或项目。模块效果会受 App 版本、接口与缓存影响，当前未完成设备实测。

@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
-root = Path(__file__).resolve().parent
-source = (root/'upstream/RedPaper_remove_ads.js').read_text()
+root = Path(__file__).resolve().parent.parent
+source = (root/'upstream/redpaper/RedPaper_remove_ads.js').read_text()
 source = source.replace('if (!$response.body) $done({});', 'if (!$response.body) return {};')
 source = source.replace('JSON.parse($persistentStore.read(', 'readCache(')
 # readCache("key")); -> readCache("key");
@@ -47,8 +47,11 @@ try { result = transform(); }
 catch (_) { console.log("[RedPaper Surge] 响应格式异常，本次保留原始响应。"); }
 $done(result);
 '''
+(root/'Scripts/Surge').mkdir(parents=True, exist_ok=True)
+(root/'Scripts/Surge/RedPaperSurge.js').write_text(wrapper)
+# Compatibility entry for previously installed modules.
 (root/'RedPaperSurge.js').write_text(wrapper)
-lpx = (root/'upstream/RedPaper_remove_ads.lpx').read_text()
+lpx = (root/'upstream/redpaper/RedPaper_remove_ads.lpx').read_text()
 lines=['#!name=小红书去广告与去水印（Surge 适配）','#!desc=基于可莉 Loon 插件，原作者 RuCu6、fmz200。启用重写与 MITM；脚本由 GitHub 自动下载。','', '[Rule]', 'AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT', '', '[Map Local]']
 for pattern, action in re.findall(r'^(\^\S+) (reject-img|reject-dict)$',lpx,re.M):
     value='data-type=tiny-gif' if action=='reject-img' else 'data-type=text data="{}" header="Content-Type:application/json"'
@@ -57,6 +60,9 @@ lines+=['','[Script]']
 patterns=re.findall(r'^http-response (\S+) script-path=',lpx,re.M)
 patterns+=re.findall(r'^(\^\S+) response-body-json-replace',lpx,re.M)
 for n,pattern in enumerate(patterns,1):
-    lines.append(f'redpaper-surge-{n:02} = type=http-response, pattern={pattern}, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js')
+    lines.append(f'redpaper-surge-{n:02} = type=http-response, pattern={pattern}, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Scripts/Surge/RedPaperSurge.js')
 lines+=['','[MITM]','hostname = %APPEND% '+lpx.split('hostname=')[1].strip(),'']
+(root/'Surge/Modules').mkdir(parents=True, exist_ok=True)
+(root/'Surge/Modules/RedPaper_remove_ads.sgmodule').write_text('\n'.join(lines))
+# Compatibility entry for previously installed subscriptions.
 (root/'RedPaper_remove_ads.sgmodule').write_text('\n'.join(lines))
