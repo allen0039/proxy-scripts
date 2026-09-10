@@ -13,12 +13,15 @@ SOURCES = {
     'RedPaper_remove_ads.lpx': 'https://kelee.one/Tool/Loon/Lpx/RedPaper_remove_ads.lpx',
     'RedPaper_remove_ads.js': 'https://kelee.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads.js',
 }
+# The publisher serves these Loon resources to versioned Loon clients.
+USER_AGENT = 'Loon/962 CFNetwork/3860.500.111.2.2 Darwin/25.0.0'
+
 OUTPUTS = ['Scripts/Surge/RedPaperSurge.js', 'Surge/Modules/RedPaper_remove_ads.sgmodule',
            'RedPaperSurge.js', 'RedPaper_remove_ads.sgmodule']
 
 
 def fetch(url):
-    with urlopen(Request(url, headers={'User-Agent': 'proxy-scripts-upstream-sync/1.0'}), timeout=60) as response:
+    with urlopen(Request(url, headers={'User-Agent': USER_AGENT}), timeout=60) as response:
         data = response.read(2_000_001)
     if not data or len(data) > 2_000_000:
         raise ValueError('Empty or oversized upstream response')
@@ -30,7 +33,9 @@ def fetch(url):
 
 def main():
     downloaded = {name: fetch(url) for name, url in SOURCES.items()}
-    if all((ROOT / 'upstream/redpaper' / name).read_bytes() == data for name, data in downloaded.items()):
+    unchanged = all((ROOT / 'upstream/redpaper' / name).read_bytes() == data for name, data in downloaded.items())
+    # Publish an initial receipt even if the first live fetch matches the snapshot.
+    if unchanged and (ROOT / 'upstream/redpaper/sync.json').exists():
         print('Upstream unchanged; nothing to publish.')
         return
     with tempfile.TemporaryDirectory(prefix='redpaper-sync-') as directory:
@@ -52,7 +57,7 @@ def main():
             name: {'url': SOURCES[name], 'sha256': hashlib.sha256(data).hexdigest()}
             for name, data in downloaded.items()}}
         (ROOT / 'upstream/redpaper/sync.json').write_text(json.dumps(metadata, indent=2) + '\n')
-        print('Upstream changed; Surge conversion and regression checks passed.')
+        print('Upstream verified; Surge conversion and regression checks passed.')
 
 
 if __name__ == '__main__':
