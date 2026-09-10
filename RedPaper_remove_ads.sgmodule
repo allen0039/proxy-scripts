@@ -1,0 +1,33 @@
+#!name=小红书去广告与去水印（Surge 适配）
+#!desc=基于可莉 Loon 插件，原作者 RuCu6、fmz200。启用重写与 MITM；脚本由 GitHub 自动下载。
+
+[Rule]
+AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT
+
+[Map Local]
+^https:\/\/ci\.xiaohongshu\.com\/system_config\/watermark data-type=tiny-gif status-code=200
+^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(?:get_style|open|submit_action) data-type=text data="{}" header="Content-Type:application/json" status-code=200
+^https:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\? data-type=text data="{}" header="Content-Type:application/json" status-code=200
+^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v2\/guide\/user_banner|v3\/note\/guide) data-type=text data="{}" header="Content-Type:application/json" status-code=200
+^https:\/\/www\.xiaohongshu\.com\/api\/sns\/(?:v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery) data-type=text data="{}" header="Content-Type:application/json" status-code=200
+
+[Script]
+redpaper-surge-01 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/note\/(?:imagefeed|live_photo\/save), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-02 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/system\/service\/ui\/config\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-03 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/system_service\/config\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-04 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/system_service\/splash_config, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-05 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/(?:note\/widgets|user\/followings\/followfeed), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-06 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v4\/followfeed\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-07 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v5\/recommend\/user\/follow_recommend\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-08 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v1\/interaction\/comment\/video\/download|v5\/note\/comment\/list), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-09 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/(?:v2\/note\/feed|v3\/note\/videofeed), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-10 = type=http-response, pattern=^https:\/\/(?:edith|rec)\.xiaohongshu\.com\/api\/sns\/v6\/homefeed\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-11 = type=http-response, pattern=^https:\/\/(?:edith|so)\.xiaohongshu\.com\/api\/sns\/v10\/search\/notes\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-12 = type=http-response, pattern=^https:\/\/(?:edith|rec|www)\.xiaohongshu\.com\/api\/sns\/(?:v4\/note\/videofeed|v10\/note\/video\/save), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-13 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/search\/banner_list$, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-14 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/search\/hot_list$, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-15 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v4\/search\/hint, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+redpaper-surge-16 = type=http-response, pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v4\/search\/trending\?, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/redbooknoads/main/RedPaperSurge.js
+
+[MITM]
+hostname = %APPEND% ci.xiaohongshu.com, edith.xiaohongshu.com, rec.xiaohongshu.com, so.xiaohongshu.com, www.xiaohongshu.com
