@@ -1,0 +1,7 @@
+#!name=anti-AD 基础去广告
+#!desc=使用 anti-AD 官方域名规则拦截广告及追踪域名；无需 MITM 或脚本。出现误拦截时可关闭本模块排查。
+#!category=广告拦截
+#!homepage=https://github.com/privacy-protection-tools/anti-AD
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-surge.txt,REJECT

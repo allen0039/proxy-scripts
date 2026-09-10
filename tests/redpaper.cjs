@@ -1,8 +1,8 @@
 const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const source = fs.readFileSync(__dirname+'/RedPaperSurge.js','utf8');
-const moduleText = fs.readFileSync(__dirname+'/RedPaper_remove_ads.sgmodule','utf8');
+const source = fs.readFileSync(__dirname+'/../Scripts/Surge/RedPaperSurge.js','utf8');
+const moduleText = fs.readFileSync(__dirname+'/../Surge/Modules/RedPaper_remove_ads.sgmodule','utf8');
 const rules = [...moduleText.matchAll(/pattern=(.*?), requires-body/g)].map(m=>new RegExp(m[1]));
 let count = 0;
 function run(path, body, store = {}) {
