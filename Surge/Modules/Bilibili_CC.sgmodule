@@ -1,0 +1,9 @@
+#!name=哔哩哔哩 CC 字幕繁转简
+#!desc=将 B 站繁体 CC 字幕转为简体；支持传统字幕 JSON 与 AI 字幕地址。需要启用 MITM。
+#!homepage=https://github.com/allen0039/proxy-scripts
+
+[Script]
+bilibili-cc = type=http-response, pattern=^https?:\/\/(?:aisubtitle|i0)\.hdslb\.com\/bfs\/(?:subtitle\/[^?]+\.json|ai_subtitle\/prod\/[^/?]+)(?:\?.*)?$, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Scripts/Common/BilibiliCC.js
+
+[MITM]
+hostname = %APPEND% aisubtitle.hdslb.com, i0.hdslb.com
