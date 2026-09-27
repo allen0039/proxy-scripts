@@ -11,6 +11,7 @@ Allen 的个人代理工具资源仓库，集中维护分流规则、去广告�
 | anti-AD 基础去广告 | 通过官方规则集拦截广告、追踪域名 | 不需要 | [模块地址](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/anti-ad-base.sgmodule) · [使用说明](docs/anti-ad.md) |
 | 小红书去广告与去水印 | 开屏、信息流、搜索等内容清理及保存去水印 | 需要 | [模块地址](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/RedPaper_remove_ads.sgmodule) · [使用说明](docs/redpaper.md) |
 | B 站 CC 繁体字幕转简体 | 转换繁体 CC 字幕正文 | 需要 | [Surge 模块](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/Bilibili_CC.sgmodule) · [Quantumult X 重写](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/QuantumultX/Rewrite/Bilibili_CC.conf) · [使用说明](docs/bilibili-cc.md) |
+| 哔哩哔哩去广告 | 清理部分开屏、推荐、动态和视频页广告 | 需要 | [Surge 模块](https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/Bilibili_remove_ads.sgmodule) · [使用说明](docs/bilibili-ads.md) |
 
 **anti-AD 基础模块：**
 
@@ -28,6 +29,12 @@ https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/Red
 
 ```text
 https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/Bilibili_CC.sgmodule
+```
+
+**B 站去广告模块：**
+
+```text
+https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Surge/Modules/Bilibili_remove_ads.sgmodule
 ```
 
 Quantumult X 用户使用上表中的重写地址；[安装与限制说明](docs/bilibili-cc.md)。
@@ -95,6 +102,7 @@ node tests/bilibili_cc.cjs
 - anti-AD：[privacy-protection-tools/anti-AD](https://github.com/privacy-protection-tools/anti-AD)。本仓库模块直接引用官方规则，不复制或自动修改上游规则。
 - 小红书：基于可莉发布的 Loon 插件适配，原作者 RuCu6、fmz200，详见[来源与构建说明](docs/redpaper.md#来源与构建)。这是个人 Surge 适配版本。
 - B 站 CC 字幕：基于 ddgksf2013 的规则重新适配，转换器使用 OpenCC JS；详见[来源与许可](docs/bilibili-cc.md#来源许可和构建)。
+- B 站去广告：使用 app2smile 的 MIT 授权脚本，由本仓库托管；详见[来源与安装](docs/bilibili-ads.md)。
 
 保留各资源原作者署名，上游内容权利及许可归相应作者或项目。模块效果会受 App 版本、接口与缓存影响，当前未完成设备实测。
 

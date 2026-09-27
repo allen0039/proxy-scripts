@@ -1,0 +1,10 @@
+#!name=哔哩哔哩去广告（Allen 自托管）
+#!desc=处理开屏、推荐、动态与视频页广告；脚本托管于 proxy-scripts。与 CC 字幕模块可同时使用。
+#!homepage=https://github.com/allen0039/proxy-scripts
+
+[MITM]
+hostname = %APPEND% app.bilibili.com, grpc.biliapi.net
+
+[Script]
+bilibili-ad-json = type=http-response, pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show)|feed\/index\?)|resource\/show\/tab\/v2), requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Scripts/Surge/BilibiliAdJSON.js
+bilibili-ad-proto = type=http-response, pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.(viewunite\.v1\.View\/View|dynamic\.v2\.Dynamic\/DynAll)$, requires-body=true, binary-body-mode=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Scripts/Surge/BilibiliAdProto.js
