@@ -1,9 +1,9 @@
 {
-  "synced_at": "2026-09-10T14:32:04.184753+00:00",
+  "synced_at": "2026-10-03T06:44:33.848218+00:00",
   "sources": {
     "RedPaper_remove_ads.lpx": {
       "url": "https://kelee.one/Tool/Loon/Lpx/RedPaper_remove_ads.lpx",
-      "sha256": "54f8cbdb77c5064e3c93c4bbc7cd525ce42fceb055b41a5ea41727477b70d1da"
+      "sha256": "b782ea4f811702a80f853eae8bd3a3f7a33c8a3af833f5c54fba3d75a524f646"
     },
     "RedPaper_remove_ads.js": {
       "url": "https://kelee.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads.js",

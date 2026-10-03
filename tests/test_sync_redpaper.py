@@ -74,6 +74,17 @@ class SyncTests(unittest.TestCase):
             self.assertEqual((self.root / path).read_bytes(), data)
         self.assertFalse((self.root / 'upstream/redpaper/sync.json').exists())
 
+    def test_unknown_modern_action_preserves_existing_files(self):
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
+        url = sync.SOURCES['RedPaper_remove_ads.lpx']
+        self.assertIn(b'reject_img(200)', self.sources[url])
+        self.sources[url] = self.sources[url].replace(b'reject_img(200)', b'reject_img(201)', 1)
+        with self.assertRaises(Exception):
+            self.run_sync()
+        for path, data in before.items():
+            self.assertEqual((self.root / path).read_bytes(), data)
+        self.assertFalse((self.root / 'upstream/redpaper/sync.json').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

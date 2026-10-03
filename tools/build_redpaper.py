@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import re
 root = Path(__file__).resolve().parent.parent
 source = (root/'upstream/redpaper/RedPaper_remove_ads.js').read_text()
@@ -62,6 +63,8 @@ lpx = (root/'upstream/redpaper/RedPaper_remove_ads.lpx').read_text()
 # Reject unsupported Loon directives rather than silently omitting them.
 section = None
 json_rewrites = []
+reject_rules = []
+script_patterns = []
 for raw in lpx.splitlines():
     line = raw.strip()
     if not line or line.startswith('#'):
@@ -75,12 +78,39 @@ for raw in lpx.splitlines():
     if section == '[Rule]':
         valid = re.sub(r'\s+', '', line) == 'AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT'
     elif section == '[Rewrite]':
-        valid = bool(re.fullmatch(r'\^\S+ (reject-img|reject-dict)', line))
-        if ' response-body-json-replace ' in line:
+        legacy_reject = re.fullmatch(r'(\^\S+) (reject-img|reject-dict)', line)
+        modern = re.fullmatch(r'(request|response) if \$\{url\} ~= /(\^\S+)/i then (.+)', line)
+        if legacy_reject:
+            reject_rules.append(legacy_reject.groups())
+            valid = True
+        elif ' response-body-json-replace ' in line:
             json_rewrites.append(line)
             valid = True
+        elif modern:
+            kind, pattern, action = modern.groups()
+            reject = re.fullmatch(r'reject_(img|dict)\(200\)', action)
+            replace = re.fullmatch(r'response\.json\.replace\((.+)\)', action)
+            if kind == 'request' and reject:
+                reject_rules.append((pattern, 'reject-' + reject.group(1)))
+                valid = True
+            elif kind == 'response' and replace:
+                args = json.loads('[' + replace.group(1) + ']')
+                if len(args) == 2:
+                    paths, values = args
+                    paths = [paths] if isinstance(paths, str) else paths
+                    values = [values] if isinstance(values, str) else values
+                    if (isinstance(paths, list) and isinstance(values, list)
+                            and len(paths) == len(values)
+                            and all(isinstance(item, str) for item in paths + values)):
+                        pairs = ' '.join(f'{path} {value}' for path, value in zip(paths, values))
+                        json_rewrites.append(f'{pattern} response-body-json-replace {pairs}')
+                        valid = True
     elif section == '[Script]':
-        valid = bool(re.fullmatch(r'http-response \S+ script-path=https://kelee\.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads\.js, requires-body=true, tag=.+', line))
+        legacy = re.fullmatch(r'http-response (\S+) script-path=https://kelee\.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads\.js, requires-body=true, tag=.+', line)
+        modern = re.fullmatch(r'response if \$\{url\} ~= /(\^\S+)/i then script\("https://kelee\.one/Resource/JavaScript/RedPaper/RedPaper_remove_ads\.js"\) with tag="[^"]+", requires_body=true', line)
+        if legacy or modern:
+            script_patterns.append((legacy or modern).group(1))
+            valid = True
     elif section == '[MitM]':
         valid = bool(re.fullmatch(r'hostname=[a-zA-Z0-9*., -]+', line))
     if not valid:
@@ -90,12 +120,11 @@ expected_json = (root/'tools/redpaper-json-rewrites.txt').read_text().splitlines
 if json_rewrites != expected_json:
     raise ValueError('Upstream JSON rewrites changed; adapter review required')
 lines=['#!name=小红书去广告与去水印（Surge 适配）','#!desc=基于可莉 Loon 插件，原作者 RuCu6、fmz200。启用重写与 MITM；脚本由 GitHub 自动下载。','', '[Rule]', 'AND,((PROTOCOL,QUIC),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT', '', '[Map Local]']
-for pattern, action in re.findall(r'^(\^\S+) (reject-img|reject-dict)$',lpx,re.M):
+for pattern, action in reject_rules:
     value='data-type=tiny-gif' if action=='reject-img' else 'data-type=text data="{}" header="Content-Type:application/json"'
     lines.append(pattern+' '+value+' status-code=200')
 lines+=['','[Script]']
-patterns=re.findall(r'^http-response (\S+) script-path=',lpx,re.M)
-patterns+=re.findall(r'^(\^\S+) response-body-json-replace',lpx,re.M)
+patterns = script_patterns + [line.split(' response-body-json-replace ', 1)[0] for line in json_rewrites]
 for n,pattern in enumerate(patterns,1):
     lines.append(f'redpaper-surge-{n:02} = type=http-response, pattern={pattern}, requires-body=true, max-size=5242880, timeout=10, script-path=https://raw.githubusercontent.com/allen0039/proxy-scripts/main/Scripts/Surge/RedPaperSurge.js')
 lines+=['','[MITM]','hostname = %APPEND% '+lpx.split('hostname=')[1].strip(),'']
